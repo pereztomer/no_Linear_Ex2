@@ -55,7 +55,7 @@ def generic_newton(f, df, ddf, x0, eps, k):
         x.append(newton_equation(x[counter-1]))
         fv.append(f(x[counter]))
 
-        if abs(x[counter] - x[counter-1]) >= eps:
+        if abs(x[counter] - x[counter-1]) < eps:
             flag = False
         counter += 1
     return fv[-1], fv
