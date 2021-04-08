@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plot
 
 
 def generic_bisect(f, df, l, u, eps, k):
@@ -132,11 +133,20 @@ if __name__ == '__main__':
     k = 50
     x0 = (lb + ub) / 2
     # x, fv = generic_bisect(f_x, df,lb, ub, eps , k)
-    # x,fv = generic_newton(f_x,df,ddf,x0,eps,k)
+    x, fv = generic_newton(f_x, df, ddf, x0, eps, k)
     # x, fv = generic_hybrid(f_x, df, ddf, lb, ub, eps, eps, k)
-    x, fv = generic_gs(f_x, lb, ub, eps, k)
+    # x, fv = generic_gs(f_x, lb, ub, eps, k)
+    real_root = -3.58254399930370
+    indicies = range(len(fv))
     print("The result is " + str(x))
+    fvGraph = []
     print()
     for obj in fv:
         print(obj)
-    # print('lb={:10.10f} ub={:10.10f}'.format(obj[0],obj[1]))
+        if type(obj) == tuple:
+            fvGraph.append((obj[0] + obj[1]) / 2)
+        if type(obj) != tuple:
+            fvGraph.append(obj)
+
+plot.semilogy(indicies, fvGraph)
+plot.show()
