@@ -60,6 +60,36 @@ def generic_newton(f, df, ddf, x0, eps, k):
         counter += 1
     return x[-1], fv
 
+def generic_hybrid(f, df, ddf, l, u, eps1, eps2, k):
+    if u <= l:
+        raise RuntimeError("u must me larger than l")
+    if eps1 < 0 or eps2 <0:
+        raise RuntimeError("epsilon must be semi positive")
+    if k <= 0:
+        raise RuntimeError("K must be a positive number")
+
+    fv = []
+    x=[]
+    fv.append(f(u))
+    x.append(u)
+    counter=0
+    while abs(u-l) > eps1 and k > 0 and abs(df(x[-1])) > eps1:
+        x_newt = x[-1]-df(x[-1])/ddf(x[-1])
+        counter+=1
+        if l <= x_newt <= u and abs(df(x_newt)) < 0.99 * abs(df(x[-1])):
+            x.append(x_newt)
+        else:
+            x.append((u+l)/2)
+
+        if df(x[-1]) * df(u) > 0:
+            u = x[-1]
+        else:
+            l=x[-1]
+        k-=1
+        fv.append(f(x[-1]))
+    return x[-1], fv
+
+
 
 if __name__ == '__main__':
     f_x = lambda x: x**2 + (x**2-3*x+10)/(2+x)
@@ -70,8 +100,9 @@ if __name__ == '__main__':
     ub = 5
     k = 50
     x0 = (lb+ub)/2
-    x, fv = generic_bisect(f_x, df,lb, ub, eps , k)
-    x,fv = generic_newton(f_x,df,ddf,x0,eps,k)
+   # x, fv = generic_bisect(f_x, df,lb, ub, eps , k)
+   # x,fv = generic_newton(f_x,df,ddf,x0,eps,k)
+    x, fv = generic_hybrid(f_x,df,ddf, lb, ub, eps, eps, k)
     print("The result is "+str(x))
     print()
     for obj in fv:
