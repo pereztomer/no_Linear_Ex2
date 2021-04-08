@@ -58,7 +58,7 @@ def generic_newton(f, df, ddf, x0, eps, k):
         if abs(x[counter] - x[counter-1]) < eps:
             flag = False
         counter += 1
-    return fv[-1], fv
+    return x[-1], fv
 
 
 if __name__ == '__main__':
@@ -72,7 +72,8 @@ if __name__ == '__main__':
     x0 = (lb+ub)/2
     x, fv = generic_bisect(f_x, df,lb, ub, eps , k)
     x,fv = generic_newton(f_x,df,ddf,x0,eps,k)
-    print(x)
+    print("The result is "+str(x))
+    print()
     for obj in fv:
         print(obj)
        # print('lb={:10.10f} ub={:10.10f}'.format(obj[0],obj[1]))
