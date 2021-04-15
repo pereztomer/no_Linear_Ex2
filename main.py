@@ -57,7 +57,7 @@ def generic_newton(f, df, ddf, x0, eps, k):
         x.append(newton_equation(x[counter - 1]))
         fv.append(f(x[counter]))
 
-        if abs(x[counter] - x[counter - 1]) < eps:
+        if abs(df(x[counter])) < eps:
             flag = False
         counter += 1
     return x[-1], fv
@@ -123,11 +123,59 @@ def generic_gs(f, l, u, eps, k):
     return x, fv
 
 
+def ex2(l, u, eps):
+    g = lambda x: -3.55 * x ** 3 + 1.1 * x ** 2 + 0.765 * x - 0.74
+    dg = lambda x: -10.65 * x ** 2 + 2.2 * x + 0.765
+    r = generic_hybrid(g, g, dg, l, u, eps, eps, 100)
+    print("The result is " + str(r))
+    return r
+
+
+def gs_denoise_step(mu, a, b, c):
+    f = lambda t: mu * (t - a) ** 2 + abs(t - b) + abs(t - c)
+    t, _ = generic_gs(f, min(a, b, c) - 1, max(a, b, c) + 1, 10 ** -10, 100000)
+    # print("The result is " + str(t))
+    return t
+
+
+# def generic_newton(f, df, ddf, x0, eps, k):
+#     xn = x0
+#     fv = []
+#     real_root = 3.58254399930370
+#     for i in range(k - 2):
+#         fv.append(f(xn))
+#         dfxn = df(xn)
+#         ddfxn = ddf(xn)
+#         xn = xn - dfxn / ddfxn
+#         if ddfxn == 0:
+#             return None
+#         if np.abs(dfxn) < eps:
+#             break
+#     fv_fv1 = [x - real_root for x in fv]
+#     plot.semilogy(range(len(fv_fv1)), fv_fv1)
+#     plot.show()
+#     return xn, fv
+
+
+def gs_denoise(s, alpha, N):
+    import copy
+    x = copy.deepcopy(s)
+    for i in range(N):
+        for k in range(len(s)):
+            if k == 0 or k == len(s) - 1:
+                bc = 0.5
+                x[k] = gs_denoise_step(alpha, 2 * s[k], bc * x[k], bc * x[k])
+            else:
+                x[k] = gs_denoise_step(alpha, s[k], x[k + 1], x[k - 1])
+    return x
+
+
 if __name__ == '__main__':
     f_x = lambda x: x ** 2 + (x ** 2 - 3 * x + 10) / (2 + x)
-    df = lambda x: 2 * x + (x ** 2 + 4 * x - 16) / ((x + 2) ** 2)
-    ddf = lambda x: x + 40 / (x + 2) ** 3
-    eps = 10 ** -6
+    df = lambda x: (2 * x ** 3 + 9 * x ** 2 + 12 * x - 16) / ((2 + x) ** 2)
+    ddf = lambda x: (2 * x ** 4 + 16 * x ** 3 + 48 * x ** 2 + 104 * x + 112) / ((x + 2) ** 4)
+
+    eps = 10 **(-6)
     lb = -1
     ub = 5
     k = 50
@@ -136,17 +184,40 @@ if __name__ == '__main__':
     x, fv = generic_newton(f_x, df, ddf, x0, eps, k)
     # x, fv = generic_hybrid(f_x, df, ddf, lb, ub, eps, eps, k)
     # x, fv = generic_gs(f_x, lb, ub, eps, k)
-    real_root = -3.58254399930370
+    real_root = 3.58254399930370
     indicies = range(len(fv))
-    print("The result is " + str(x))
+    # print("The result is " + str(x))
     fvGraph = []
-    print()
     for obj in fv:
         print(obj)
         if type(obj) == tuple:
-            fvGraph.append((obj[0] + obj[1]) / 2)
+            fvGraph.append(((obj[0] + obj[1]) / 2)-real_root)
         if type(obj) != tuple:
             fvGraph.append(obj)
+    # # r = ex2(-1, 2, 10 ** -5)
+    # # print("The result is " + str(r))
+    plot.semilogy(indicies, fvGraph)
+    plot.show()
+    # gs_denoise_step(2, 4, 8, 2)
 
-plot.semilogy(indicies, fvGraph)
-plot.show()
+    # plotting the real discrete signal
+    # real_s_1 = [1.] * 40
+    # real_s_0 = [0.] * 40
+    #
+    # plot.plot(range(40), real_s_1, 'black', linewidth=0.7)
+    # plot.plot(range(41, 81), real_s_0, 'black', linewidth=0.7)
+    #
+    # # solving the problem
+    # s = np.array([[1.] * 40 + [0.] * 40]).T + 0.1 * np.random.randn(80, 1)  # noised signal
+    # x1 = gs_denoise(s, 0.5, 100)
+    # x2 = gs_denoise(s, 0.5, 1000)
+    # x3 = gs_denoise(s, 0.5, 10000)
+    #
+    # plot.plot(range(80), s, 'cyan', linewidth=0.7)
+    # plot.plot(range(80), x1, 'red', linewidth=0.7)
+    # plot.plot(range(80), x2, 'green', linewidth=0.7)
+    # plot.plot(range(80), x3, 'blue', linewidth=0.7)
+    # print("X1:", x1)
+    # print("X2:", x2)
+    # print("X3:", x3)
+    # plot.show()
