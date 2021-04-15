@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plot
 
+real_root = 3.58254399930370
+
 
 def generic_bisect(f, df, l, u, eps, k):
     """
@@ -30,37 +32,11 @@ def generic_bisect(f, df, l, u, eps, k):
             l = h
 
     x = (l + u) / 2
+    fv_fv1 = [((x[0] + x[1]) / 2) - real_root for x in fv]
+    plot.semilogy(range(len(fv_fv1)), fv_fv1)
+    plot.legend(['bisect'])
+    plot.show()
     return x, fv
-
-
-def generic_newton(f, df, ddf, x0, eps, k):
-    """
-
-    :param f: a fucntion
-    :param df: f'
-    :param ddf: f''
-    :param x0: a beginning point for the newton method (double)
-    :param eps: a minimal error (double)
-    :param k: number of iterations (int)
-    """
-    if eps < 0:
-        raise RuntimeError("Epsilon must be a semi positive number")
-    if k <= 0:
-        raise RuntimeError("K must be a positive number")
-    x = []
-    fv = []
-    x.append(x0)
-    counter = 1
-    flag = True
-    newton_equation = lambda x: x - df(x) / ddf(x)
-    while flag and counter <= k - 1:
-        x.append(newton_equation(x[counter - 1]))
-        fv.append(f(x[counter]))
-
-        if abs(df(x[counter])) < eps:
-            flag = False
-        counter += 1
-    return x[-1], fv
 
 
 def generic_hybrid(f, df, ddf, l, u, eps1, eps2, k):
@@ -89,6 +65,10 @@ def generic_hybrid(f, df, ddf, l, u, eps1, eps2, k):
             l = x[-1]
         k -= 1
         fv.append(f(x[-1]))
+    fv_fv1 = [x - real_root for x in fv]
+    plot.semilogy(range(len(fv_fv1)), fv_fv1)
+    plot.legend(['hybrid'])
+    plot.show()
     return x[-1], fv
 
 
@@ -120,6 +100,10 @@ def generic_gs(f, l, u, eps, k):
         if np.abs(u - l) < eps:
             break
     x = (x2 + x3) / 2
+    fv_fv1 = [((x[0] + x[1]) / 2) - real_root for x in fv]
+    plot.semilogy(range(len(fv_fv1)), fv_fv1)
+    plot.legend(['golden section'])
+    plot.show()
     return x, fv
 
 
@@ -138,23 +122,37 @@ def gs_denoise_step(mu, a, b, c):
     return t
 
 
-# def generic_newton(f, df, ddf, x0, eps, k):
-#     xn = x0
-#     fv = []
-#     real_root = 3.58254399930370
-#     for i in range(k - 2):
-#         fv.append(f(xn))
-#         dfxn = df(xn)
-#         ddfxn = ddf(xn)
-#         xn = xn - dfxn / ddfxn
-#         if ddfxn == 0:
-#             return None
-#         if np.abs(dfxn) < eps:
-#             break
-#     fv_fv1 = [x - real_root for x in fv]
-#     plot.semilogy(range(len(fv_fv1)), fv_fv1)
-#     plot.show()
-#     return xn, fv
+def generic_newton(f, df, ddf, x0, eps, k):
+    """
+
+      :param f: a fucntion
+      :param df: f'
+      :param ddf: f''
+      :param x0: a beginning point for the newton method (double)
+      :param eps: a minimal error (double)
+      :param k: number of iterations (int)
+      """
+    if eps < 0:
+        raise RuntimeError("Epsilon must be a semi positive number")
+    if k <= 0:
+        raise RuntimeError("K must be a positive number")
+    xn = x0
+    fv = []
+
+    for i in range(k - 2):
+        fv.append(f(xn))
+        dfxn = df(xn)
+        ddfxn = ddf(xn)
+        xn = xn - dfxn / ddfxn
+        if ddfxn == 0:
+            return None
+        if np.abs(dfxn) < eps:
+            break
+    fv_fv1 = [x - real_root for x in fv]
+    plot.semilogy(range(len(fv_fv1)), fv_fv1)
+    plot.legend(['Newton'])
+    plot.show()
+    return xn, fv
 
 
 def gs_denoise(s, alpha, N):
@@ -175,29 +173,20 @@ if __name__ == '__main__':
     df = lambda x: (2 * x ** 3 + 9 * x ** 2 + 12 * x - 16) / ((2 + x) ** 2)
     ddf = lambda x: (2 * x ** 4 + 16 * x ** 3 + 48 * x ** 2 + 104 * x + 112) / ((x + 2) ** 4)
 
-    eps = 10 **(-6)
+    eps = 10 ** (-6)
     lb = -1
     ub = 5
     k = 50
     x0 = (lb + ub) / 2
-    # x, fv = generic_bisect(f_x, df,lb, ub, eps , k)
-    x, fv = generic_newton(f_x, df, ddf, x0, eps, k)
+    x, fv = generic_bisect(f_x, df,lb, ub, eps , k)
+    # x, fv = generic_newton(f_x, df, ddf, x0, eps, k)
     # x, fv = generic_hybrid(f_x, df, ddf, lb, ub, eps, eps, k)
     # x, fv = generic_gs(f_x, lb, ub, eps, k)
-    real_root = 3.58254399930370
-    indicies = range(len(fv))
     # print("The result is " + str(x))
-    fvGraph = []
-    for obj in fv:
-        print(obj)
-        if type(obj) == tuple:
-            fvGraph.append(((obj[0] + obj[1]) / 2)-real_root)
-        if type(obj) != tuple:
-            fvGraph.append(obj)
-    # # r = ex2(-1, 2, 10 ** -5)
-    # # print("The result is " + str(r))
-    plot.semilogy(indicies, fvGraph)
-    plot.show()
+    # r = ex2(-1, 2, 10 ** -5)
+    # print("The result is " + str(r))
+    # plot.semilogy(indicies, fvGraph)
+    # plot.show()
     # gs_denoise_step(2, 4, 8, 2)
 
     # plotting the real discrete signal
